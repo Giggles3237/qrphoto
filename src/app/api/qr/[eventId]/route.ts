@@ -10,8 +10,9 @@ export async function GET(
   const format = searchParams.get("format") ?? "png";
   const size = parseInt(searchParams.get("size") ?? "512", 10);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const eventUrl = `${appUrl}/e/${eventId}`;
+  // Use the actual origin from the request to ensure the QR code works on production/localhost automatically
+  const origin = request.nextUrl.origin;
+  const eventUrl = `${origin}/e/${eventId}`;
 
   try {
     if (format === "svg") {
