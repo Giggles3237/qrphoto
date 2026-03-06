@@ -24,7 +24,7 @@ export function MediaRecorder({
   const [isUploading, setIsUploading] = useState(false);
   const [timer, setTimer] = useState(0);
 
-  const mediaRecorderRef = useRef<window.MediaRecorder | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
