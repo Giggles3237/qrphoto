@@ -47,7 +47,7 @@ export function MediaRecorder({
         mimeType: type === "video" ? "video/webm" : "audio/webm",
       };
 
-      const mediaRecorder = new MediaRecorder(stream, options);
+      const mediaRecorder = new (window as any).MediaRecorder(stream, options) as MediaRecorder;
       mediaRecorderRef.current = mediaRecorder;
 
       const chunks: Blob[] = [];
