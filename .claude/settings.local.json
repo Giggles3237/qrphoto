@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm)",
+      "Bash(npx create-next-app@latest qrphoto-temp --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm)",
+      "Bash(npm install @supabase/supabase-js @supabase/ssr @aws-sdk/client-s3 @aws-sdk/s3-request-presigner sharp qrcode archiver nanoid bcryptjs zod date-fns lucide-react sonner class-variance-authority clsx tailwind-merge)",
+      "Bash(npm install -D @types/qrcode @types/archiver @types/bcryptjs)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button card input label table badge dialog tabs textarea select dropdown-menu separator sonner toast -y)",
+      "Bash(npx shadcn@latest add button card input label table badge dialog tabs textarea select dropdown-menu separator sonner -y)",
+      "Bash(npx next build)",
+      "Bash(timeout 15 npx next dev --port 3000)",
+      "Bash(timeout 15 npx next dev --port 3001)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npm)"
+    ]
+  }
+}
