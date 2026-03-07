@@ -80,8 +80,8 @@ export default async function EventLandingPage({
               </Link>
               <Link
                 href={`/e/${slug}/guest-book`}
-                className="inline-flex items-center justify-center gap-3 rounded-full border px-8 py-4 text-lg font-medium transition-all hover:bg-muted/50 opacity-80"
-                style={{ borderColor: "var(--event-primary)", color: "var(--event-primary)" }}
+                className="inline-flex items-center justify-center gap-3 rounded-full border px-8 py-4 text-lg font-medium transition-all hover:bg-muted/50"
+                style={{ borderColor: "var(--event-accent)", color: "var(--event-accent)" }}
               >
                 View Guest Book
               </Link>
