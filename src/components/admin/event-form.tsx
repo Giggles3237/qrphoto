@@ -45,6 +45,7 @@ export function EventForm({ event, mode }: EventFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingBackground, setIsUploadingBackground] = useState(false);
   const [isExtractingColors, setIsExtractingColors] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
 
@@ -89,6 +90,9 @@ export function EventForm({ event, mode }: EventFormProps) {
   );
   const [backgroundColor, setBackgroundColor] = useState(
     (event?.theme as Record<string, string>)?.background_color ?? ""
+  );
+  const [backgroundUrl, setBackgroundUrl] = useState(
+    (event?.theme as Record<string, string>)?.background_url ?? ""
   );
   const [shareText, setShareText] = useState(
     (event?.theme as Record<string, string>)?.share_text ?? ""
@@ -169,6 +173,39 @@ export function EventForm({ event, mode }: EventFormProps) {
     }
   }
 
+  async function handleBackgroundUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBackground(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      setBackgroundUrl(data.url);
+      toast.success("Background image uploaded successfully");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to upload background";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsUploadingBackground(false);
+    }
+  }
+
   function resetColors() {
     const defaults = BRAND_THEMES[brandKey] || BRAND_THEMES.default;
     setPrimaryColor(defaults.primary_color);
@@ -232,6 +269,7 @@ export function EventForm({ event, mode }: EventFormProps) {
     if (primaryColor) theme.primary_color = primaryColor;
     if (accentColor) theme.accent_color = accentColor;
     if (backgroundColor) theme.background_color = backgroundColor;
+    if (backgroundUrl) theme.background_url = backgroundUrl;
     if (shareText) theme.share_text = shareText;
 
     const payload: Record<string, unknown> = {
@@ -560,6 +598,58 @@ export function EventForm({ event, mode }: EventFormProps) {
                       {logoUrl ? "Logo uploaded" : "No logo selected"}
                     </p>
                     <p>Transparent PNG or SVG works best.</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="background-image">Background Image</Label>
+            <div className="flex items-center gap-4">
+              {backgroundUrl ? (
+                <div className="relative group">
+                  <div className="h-20 w-32 bg-muted rounded-lg border overflow-hidden flex items-center justify-center">
+                    <img
+                      src={backgroundUrl}
+                      alt="Background Preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBackgroundUrl("")}
+                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-20 w-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors">
+                  <div className="flex flex-col items-center justify-center py-2">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground mt-1">
+                      Upload BG
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleBackgroundUpload}
+                    disabled={isUploadingBackground}
+                  />
+                </label>
+              )}
+              <div className="flex-1 text-xs text-muted-foreground">
+                {isUploadingBackground ? (
+                  <p className="animate-pulse">Uploading...</p>
+                ) : (
+                  <>
+                    <p className="font-medium text-foreground mb-1">
+                      {backgroundUrl ? "Background set" : "No background image"}
+                    </p>
+                    <p>High resolution photos work best.</p>
                   </>
                 )}
               </div>

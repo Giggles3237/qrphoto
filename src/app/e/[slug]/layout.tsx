@@ -44,7 +44,7 @@ export default async function EventLayout({
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative"
       style={
         {
           "--event-primary": theme.primary_color,
@@ -54,7 +54,23 @@ export default async function EventLayout({
         } as React.CSSProperties
       }
     >
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-transparent to-black/[0.03]">
+      {/* Background Image Layer */}
+      {theme.background_url && (
+        <div className="fixed inset-0 z-0">
+          <img
+            src={theme.background_url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          {/* Subtle overlay to ensure text readability */}
+          <div 
+            className="absolute inset-0 bg-white/60 backdrop-blur-[2px]" 
+            style={{ backgroundColor: `${theme.background_color || "#FFFFFF"}99` }} 
+          />
+        </div>
+      )}
+
+      <div className="min-h-screen flex flex-col relative z-10 bg-gradient-to-b from-transparent to-black/[0.03]">
         {/* Header */}
         <header className="flex flex-col items-center sticky top-0 z-10 pt-8 pb-4 bg-gradient-to-b from-[var(--event-bg)] via-[var(--event-bg)]/95 to-transparent px-4">
           {theme.logo_url && (
