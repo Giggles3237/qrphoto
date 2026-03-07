@@ -31,7 +31,9 @@ BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
 
 CREATE TRIGGER events_updated_at
   BEFORE UPDATE ON public.events
@@ -113,7 +115,7 @@ CREATE POLICY "events_delete_auth" ON public.events FOR DELETE USING (auth.role(
 
 -- Media: anyone can read and insert (anonymous uploads), authenticated can manage
 CREATE POLICY "media_read_all" ON public.media FOR SELECT USING (true);
-CREATE POLICY "media_insert_all" ON public.media FOR INSERT WITH CHECK (true);
+CREATE POLICY "media_insert_anon" ON public.media FOR INSERT WITH CHECK (event_id IS NOT NULL);
 CREATE POLICY "media_update_auth" ON public.media FOR UPDATE USING (auth.role() = 'authenticated');
 CREATE POLICY "media_delete_auth" ON public.media FOR DELETE USING (auth.role() = 'authenticated');
 
@@ -123,5 +125,5 @@ CREATE POLICY "download_jobs_all_auth" ON public.download_jobs FOR ALL USING (au
 -- Guest book entries: anyone can read and insert, authenticated can delete
 ALTER TABLE public.guest_book_entries ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "guest_book_read_all" ON public.guest_book_entries FOR SELECT USING (true);
-CREATE POLICY "guest_book_insert_all" ON public.guest_book_entries FOR INSERT WITH CHECK (true);
+CREATE POLICY "guest_book_insert_anon" ON public.guest_book_entries FOR INSERT WITH CHECK (event_id IS NOT NULL);
 CREATE POLICY "guest_book_delete_auth" ON public.guest_book_entries FOR DELETE USING (auth.role() = 'authenticated');
