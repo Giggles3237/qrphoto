@@ -21,11 +21,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Upload, X, Crop, RotateCcw } from "lucide-react";
+import { Upload, X, Crop, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { LogoCropper } from "./logo-cropper";
 import { BRAND_THEMES } from "@/lib/brands/themes";
 import type { Event, BrandKey, PrivacyMode } from "@/types";
+import ColorThief from "colorthief";
 
 interface EventFormProps {
   event?: Event;
@@ -39,11 +40,19 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
+function rgbToHex(r: number, g: number, b: number) {
+  return "#" + [r, g, b].map(x => {
+    const hex = Math.round(x).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  }).join("").toUpperCase();
+}
+
 export function EventForm({ event, mode }: EventFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isExtractingColors, setIsExtractingColors] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
 
   const [name, setName] = useState(event?.name ?? "");
@@ -170,6 +179,52 @@ export function EventForm({ event, mode }: EventFormProps) {
     setAccentColor(defaults.accent_color);
     setBackgroundColor(defaults.background_color || "#FFFFFF");
     toast.info(`Colors reset to ${brandKey} defaults`);
+  }
+
+  async function handleInvitationUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsExtractingColors(true);
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const colorThief = new ColorThief();
+          const palette = colorThief.getPalette(img, 5);
+          
+          if (palette && palette.length >= 3) {
+            // Sort palette by luminance/vibrancy if needed, but ColorThief returns dominant first
+            // 1. Dominant -> Primary
+            // 2. Brightest/Softest -> Background
+            // 3. Most contrast/vibrant -> Accent
+            
+            const primary = rgbToHex(palette[0][0], palette[0][1], palette[0][2]);
+            
+            // Find a light color for background
+            const lightColor = palette.find(p => (p[0] + p[1] + p[2]) > 600) || palette[1];
+            const bg = rgbToHex(lightColor[0], lightColor[1], lightColor[2]);
+            
+            // Find a vibrant color for accent
+            const accent = rgbToHex(palette[2][0], palette[2][1], palette[2][2]);
+
+            setPrimaryColor(primary);
+            setBackgroundColor(bg);
+            setAccentColor(accent);
+            toast.success("Magic theme applied from invitation!");
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error("Could not extract colors from this image.");
+        } finally {
+          setIsExtractingColors(false);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -548,17 +603,32 @@ export function EventForm({ event, mode }: EventFormProps) {
           </div>
 
           <div className="space-y-4 pt-2">
-            <Label>Smart Wedding Themes</Label>
+            <div className="flex items-center justify-between">
+              <Label>Smart Wedding Themes</Label>
+              <label className="cursor-pointer">
+                <div className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                  <Sparkles className="h-3 w-3" />
+                  {isExtractingColors ? "Analyzing..." : "Magic Theme from Invitation"}
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleInvitationUpload}
+                  disabled={isExtractingColors}
+                />
+              </label>
+            </div>
             <div className="flex flex-wrap gap-3">
               {[
-                { name: "Rose Gold", primary: "#B76E79", accent: "#FFFFFF", bg: "#FFF5F6" },
-                { name: "Modern Sage", primary: "#87A96B", accent: "#FFFFFF", bg: "#F4F9F0" },
-                { name: "Dusty Blue", primary: "#5D8AA8", accent: "#FFFFFF", bg: "#F0F7FA" },
+                { name: "Rose Gold", primary: "#B76E79", accent: "#EACDC2", bg: "#FFF5F6" },
+                { name: "Modern Sage", primary: "#87A96B", accent: "#D4E0D2", bg: "#F4F9F0" },
+                { name: "Dusty Blue", primary: "#5D8AA8", accent: "#BCD4E6", bg: "#F0F7FA" },
                 { name: "Midnight", primary: "#1A2238", accent: "#FFD700", bg: "#F8F9FA" },
-                { name: "Champagne", primary: "#D4AF37", accent: "#FFFFFF", bg: "#FCFBF0" },
-                { name: "Emerald", primary: "#046307", accent: "#FFFFFF", bg: "#F0F9F0" },
-                { name: "Burgundy", primary: "#800020", accent: "#FFFFFF", bg: "#FFF0F2" },
-                { name: "Lavender", primary: "#967BB6", accent: "#FFFFFF", bg: "#F9F7FC" },
+                { name: "Champagne", primary: "#D4AF37", accent: "#EED971", bg: "#FCFBF0" },
+                { name: "Emerald", primary: "#046307", accent: "#A5D6A7", bg: "#F0F9F0" },
+                { name: "Burgundy", primary: "#800020", accent: "#D0A9AA", bg: "#FFF0F2" },
+                { name: "Lavender", primary: "#967BB6", accent: "#E6E6FA", bg: "#F9F7FC" },
               ].map((theme) => (
                 <button
                   key={theme.name}
