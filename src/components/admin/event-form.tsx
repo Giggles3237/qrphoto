@@ -976,6 +976,78 @@ export function EventForm({ event, mode }: EventFormProps) {
               Pre-filled text and hashtags for when guests share to Facebook or other apps.
             </p>
           </div>
+
+          {/* Live Preview Section */}
+          <div className="pt-6 border-t border-muted mt-4">
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-4 block">Live Style Preview</Label>
+            <div 
+              className="rounded-2xl p-8 border shadow-inner transition-all duration-500 overflow-hidden relative"
+              style={{ 
+                backgroundColor: backgroundColor || "#FFFFFF",
+                fontFamily: ({
+                  "Inter": "var(--font-inter)",
+                  "Source Sans Pro": "var(--font-source-sans)",
+                  "Montserrat": "var(--font-montserrat)",
+                  "Open Sans": "var(--font-open-sans)",
+                  "Lato": "var(--font-lato)",
+                  "Geist": "var(--font-geist-sans)",
+                }[bodyFont] || "sans-serif")
+              }}
+            >
+              {backgroundUrl && (
+                <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                  <img src={backgroundUrl} alt="" className="w-full h-full object-cover" style={{ filter: `blur(${backgroundBlur}px)`, opacity: (100 - backgroundOpacity) / 100 }} />
+                  <div className="absolute inset-0" style={{ backgroundColor: backgroundColor || "#FFFFFF", opacity: backgroundOpacity / 100 }} />
+                </div>
+              )}
+              
+              <div className="relative z-10 text-center space-y-4">
+                {logoUrl && (
+                  <div className="flex justify-center mb-4">
+                    <div className="h-16 w-16 rounded-full bg-white shadow-sm overflow-hidden flex items-center justify-center border">
+                      <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                    </div>
+                  </div>
+                )}
+                
+                <h3 
+                  className="text-2xl font-medium tracking-tight transition-colors duration-500"
+                  style={{ 
+                    color: accentColor || primaryColor || "inherit",
+                    fontFamily: ({
+                      "Playfair Display": "var(--font-playfair)",
+                      "Cormorant Garamond": "var(--font-cormorant)",
+                      "Sacramento": "var(--font-sacramento)",
+                      "Alex Brush": "var(--font-alex-brush)",
+                      "Cinzel": "var(--font-cinzel)",
+                      "Lora": "var(--font-lora)",
+                    }[headingFont] || "serif")
+                  }}
+                >
+                  {headingText || "The Big Day"}
+                </h3>
+                
+                <p 
+                  className="text-sm max-w-[200px] mx-auto opacity-80"
+                  style={{ color: accentColor || primaryColor || "inherit" }}
+                >
+                  {subheadingText || "Capturing every beautiful moment together."}
+                </p>
+                
+                <div className="pt-2">
+                  <div 
+                    className="inline-block rounded-full px-6 py-2 text-xs font-medium shadow-md"
+                    style={{ 
+                      backgroundColor: accentColor || "#000000",
+                      color: primaryColor || "#FFFFFF"
+                    }}
+                  >
+                    Sample Button
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
