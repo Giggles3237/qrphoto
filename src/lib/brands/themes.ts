@@ -13,6 +13,7 @@ export const BRAND_THEMES: Record<BrandKey, BrandTheme> = {
     disclaimer_text:
       "Uploads are visible to event organizers and may be used for marketing purposes.",
     button_label: "Upload Photos",
+    share_text: "Check out the photos from the BMW event! #BMW #QRPhoto",
   },
   mini: {
     logo_url: "/brands/mini/logo.svg",
@@ -26,6 +27,7 @@ export const BRAND_THEMES: Record<BrandKey, BrandTheme> = {
     disclaimer_text:
       "Uploads are visible to event organizers and may be used for marketing purposes.",
     button_label: "Upload Photos",
+    share_text: "Check out the photos from the MINI event! #MINI #QRPhoto",
   },
   personal: {
     logo_url: null,
@@ -38,6 +40,7 @@ export const BRAND_THEMES: Record<BrandKey, BrandTheme> = {
     background_url: null,
     disclaimer_text: "Uploads are visible to event organizers.",
     button_label: "Upload Photos",
+    share_text: "Sharing our special moments! #WeddingPhotos #QRPhoto",
   },
   default: {
     logo_url: null,
@@ -50,5 +53,6 @@ export const BRAND_THEMES: Record<BrandKey, BrandTheme> = {
     background_url: null,
     disclaimer_text: "Uploads are visible to event organizers.",
     button_label: "Upload Photos",
+    share_text: "Check out our event photos! #QRPhoto",
   },
 };

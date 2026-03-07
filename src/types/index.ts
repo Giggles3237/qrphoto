@@ -14,6 +14,7 @@ export interface BrandTheme {
   background_url: string | null;
   disclaimer_text?: string;
   button_label?: string;
+  share_text?: string;
 }
 
 export interface Event {

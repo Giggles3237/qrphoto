@@ -8,6 +8,7 @@ interface UploadSuccessProps {
   onUploadMore: () => void;
   primaryColor: string;
   lastMedia?: Media | null;
+  shareText?: string;
 }
 
 export function UploadSuccess({
@@ -15,11 +16,13 @@ export function UploadSuccess({
   onUploadMore,
   primaryColor,
   lastMedia,
+  shareText,
 }: UploadSuccessProps) {
   const handleShare = async () => {
+    const defaultText = "Check out this photo I just uploaded! #WeddingPhotos #QRPhoto";
     const shareData = {
       title: "My Photo from the Event",
-      text: "Check out this photo I just uploaded! #WeddingPhotos #QRPhoto",
+      text: shareText || defaultText,
       url: window.location.href.replace("/upload", "/gallery"),
     };
 

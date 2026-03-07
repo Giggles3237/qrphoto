@@ -23,6 +23,7 @@ export const createEventSchema = z.object({
       background_url: z.string().nullable().optional(),
       disclaimer_text: z.string().optional(),
       button_label: z.string().optional(),
+      share_text: z.string().optional(),
     })
     .default({}),
   upload_enabled: z.boolean().default(true),

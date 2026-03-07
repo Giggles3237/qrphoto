@@ -90,6 +90,9 @@ export function EventForm({ event, mode }: EventFormProps) {
   const [backgroundColor, setBackgroundColor] = useState(
     (event?.theme as Record<string, string>)?.background_color ?? ""
   );
+  const [shareText, setShareText] = useState(
+    (event?.theme as Record<string, string>)?.share_text ?? ""
+  );
 
   function handleNameChange(value: string) {
     setName(value);
@@ -229,6 +232,7 @@ export function EventForm({ event, mode }: EventFormProps) {
     if (primaryColor) theme.primary_color = primaryColor;
     if (accentColor) theme.accent_color = accentColor;
     if (backgroundColor) theme.background_color = backgroundColor;
+    if (shareText) theme.share_text = shareText;
 
     const payload: Record<string, unknown> = {
       name,
@@ -735,6 +739,20 @@ export function EventForm({ event, mode }: EventFormProps) {
             </div>
             <p className="text-[10px] text-muted-foreground">
               This will be used as the base background for all event pages.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="shareText">Social Sharing Text</Label>
+            <Textarea
+              id="shareText"
+              value={shareText}
+              onChange={(e) => setShareText(e.target.value)}
+              placeholder="Check out our wedding photos! #OurWedding #QRPhoto"
+              rows={2}
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Pre-filled text and hashtags for when guests share to Facebook or other apps.
             </p>
           </div>
         </CardContent>

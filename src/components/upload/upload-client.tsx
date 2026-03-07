@@ -10,6 +10,7 @@ interface UploadClientProps {
   maxFileSizeMb: number;
   allowedTypes: string[];
   primaryColor: string;
+  shareText?: string;
 }
 
 export type UploadState = "idle" | "uploading" | "success" | "error";
@@ -28,6 +29,7 @@ export function UploadClient({
   maxFileSizeMb,
   allowedTypes,
   primaryColor,
+  shareText,
 }: UploadClientProps) {
   const [uploads, setUploads] = useState<UploadFile[]>([]);
   const [totalCompleted, setTotalCompleted] = useState(0);
@@ -209,6 +211,7 @@ export function UploadClient({
           onUploadMore={handleUploadMore}
           primaryColor={primaryColor}
           lastMedia={lastUploadedMedia}
+          shareText={shareText}
         />
       )}
 
