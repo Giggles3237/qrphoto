@@ -99,6 +99,12 @@ export function EventForm({ event, mode }: EventFormProps) {
   const [shareText, setShareText] = useState(
     (event?.theme as Record<string, string>)?.share_text ?? ""
   );
+  const [backgroundBlur, setBackgroundBlur] = useState<number>(
+    (event?.theme as Record<string, any>)?.background_blur ?? 0
+  );
+  const [backgroundOpacity, setBackgroundOpacity] = useState<number>(
+    (event?.theme as Record<string, any>)?.background_opacity ?? 50
+  );
 
   function handleNameChange(value: string) {
     setName(value);
@@ -245,6 +251,8 @@ export function EventForm({ event, mode }: EventFormProps) {
     setPrimaryColor(defaults.primary_color);
     setAccentColor(defaults.accent_color);
     setBackgroundColor(defaults.background_color || "#FFFFFF");
+    setBackgroundBlur(defaults.background_blur || 0);
+    setBackgroundOpacity(defaults.background_opacity ?? 50);
     toast.info(`Colors reset to ${brandKey} defaults`);
   }
 
@@ -304,6 +312,8 @@ export function EventForm({ event, mode }: EventFormProps) {
     if (accentColor) theme.accent_color = accentColor;
     if (backgroundColor) theme.background_color = backgroundColor;
     if (backgroundUrl) theme.background_url = backgroundUrl;
+    theme.background_blur = backgroundBlur;
+    theme.background_opacity = backgroundOpacity;
     if (shareText) theme.share_text = shareText;
 
     const payload: Record<string, unknown> = {
@@ -886,7 +896,49 @@ export function EventForm({ event, mode }: EventFormProps) {
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4 py-2 border-t border-muted mt-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="blur">Background Blur</Label>
+                <span className="text-xs font-mono">{backgroundBlur}px</span>
+              </div>
+              <input
+                id="blur"
+                type="range"
+                min="0"
+                max="20"
+                step="1"
+                value={backgroundBlur}
+                onChange={(e) => setBackgroundBlur(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                Blurs the background image to make text pop.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="opacity">Background Opacity</Label>
+                <span className="text-xs font-mono">{backgroundOpacity}%</span>
+              </div>
+              <input
+                id="opacity"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={backgroundOpacity}
+                onChange={(e) => setBackgroundOpacity(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                Controls the intensity of the color overlay on the background.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-muted">
             <Label htmlFor="shareText">Social Sharing Text</Label>
             <Textarea
               id="shareText"

@@ -42,6 +42,11 @@ export default async function EventLayout({
     event.theme as Partial<BrandTheme>
   );
 
+  const blurValue = theme.background_blur ?? 0;
+  const opacityValue = (theme.background_opacity ?? 50) / 100;
+  // Convert hex background color to RGB for the overlay with opacity
+  const bgColor = theme.background_color || "#FFFFFF";
+
   return (
     <div
       className="min-h-screen relative"
@@ -49,7 +54,7 @@ export default async function EventLayout({
         {
           "--event-primary": theme.primary_color,
           "--event-accent": theme.accent_color,
-          "--event-bg": theme.background_color || "#FFFFFF",
+          "--event-bg": bgColor,
           backgroundColor: "var(--event-bg)",
         } as React.CSSProperties
       }
@@ -61,16 +66,20 @@ export default async function EventLayout({
             src={theme.background_url}
             alt=""
             className="w-full h-full object-cover"
+            style={{ filter: `blur(${blurValue}px)` }}
           />
           {/* Subtle overlay to ensure text readability */}
           <div 
-            className="absolute inset-0 bg-white/60 backdrop-blur-[2px]" 
-            style={{ backgroundColor: `${theme.background_color || "#FFFFFF"}99` }} 
+            className="absolute inset-0" 
+            style={{ 
+              backgroundColor: bgColor,
+              opacity: opacityValue 
+            }} 
           />
         </div>
       )}
 
-      <div className="min-h-screen flex flex-col relative z-10 bg-gradient-to-b from-transparent to-black/[0.03]">
+      <div className="min-h-screen flex flex-col relative z-10">
         {/* Header */}
         <header className="flex flex-col items-center sticky top-0 z-10 pt-8 pb-4 bg-gradient-to-b from-[var(--event-bg)] via-[var(--event-bg)]/95 to-transparent px-4">
           {theme.logo_url && (
