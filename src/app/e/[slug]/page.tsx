@@ -41,7 +41,7 @@ export default async function EventLandingPage({
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
       <div className="text-center max-w-md space-y-8">
         <div className="space-y-3">
-          <h1 className="text-4xl sm:text-5xl font-serif tracking-tight" style={{ color: "var(--event-accent)" }}>{theme.heading_text}</h1>
+          <h1 className="text-4xl sm:text-5xl tracking-tight" style={{ color: "var(--event-accent)", fontFamily: "var(--event-heading-font)" }}>{theme.heading_text}</h1>
           <p className="text-lg px-6 font-light" style={{ color: "var(--event-accent)", opacity: 0.9 }}>{theme.subheading_text}</p>
         </div>
 

@@ -47,6 +47,24 @@ export default async function EventLayout({
   // Convert hex background color to RGB for the overlay with opacity
   const bgColor = theme.background_color || "#FFFFFF";
 
+  const fontMap: Record<string, string> = {
+    "Playfair Display": "var(--font-playfair)",
+    "Source Sans Pro": "var(--font-source-sans)",
+    "Cormorant Garamond": "var(--font-cormorant)",
+    "Inter": "var(--font-inter)",
+    "Sacramento": "var(--font-sacramento)",
+    "Geist": "var(--font-geist-sans)",
+    "Alex Brush": "var(--font-alex-brush)",
+    "Montserrat": "var(--font-montserrat)",
+    "Lora": "var(--font-lora)",
+    "Open Sans": "var(--font-open-sans)",
+    "Cinzel": "var(--font-cinzel)",
+    "Lato": "var(--font-lato)",
+  };
+
+  const headingFont = fontMap[theme.heading_font || "Playfair Display"] || "serif";
+  const bodyFont = fontMap[theme.body_font || "Inter"] || "sans-serif";
+
   return (
     <div
       className="min-h-screen relative"
@@ -55,7 +73,10 @@ export default async function EventLayout({
           "--event-primary": theme.primary_color,
           "--event-accent": theme.accent_color,
           "--event-bg": bgColor,
+          "--event-heading-font": headingFont,
+          "--event-body-font": bodyFont,
           backgroundColor: "var(--event-bg)",
+          fontFamily: "var(--event-body-font)",
         } as React.CSSProperties
       }
     >

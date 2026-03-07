@@ -23,6 +23,8 @@ export const createEventSchema = z.object({
       background_url: z.string().nullable().optional(),
       background_blur: z.number().min(0).max(20).optional(),
       background_opacity: z.number().min(0).max(100).optional(),
+      heading_font: z.string().optional(),
+      body_font: z.string().optional(),
       disclaimer_text: z.string().optional(),
       button_label: z.string().optional(),
       share_text: z.string().optional(),

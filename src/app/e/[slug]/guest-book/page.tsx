@@ -51,7 +51,7 @@ export default async function GuestBookPage({
   return (
     <div className="flex-1 px-4 py-8">
       <div className="max-w-5xl mx-auto space-y-8">
-        <h1 className="text-3xl font-serif tracking-tight text-center" style={{ color: "var(--event-accent)" }}>
+        <h1 className="text-3xl tracking-tight text-center" style={{ color: "var(--event-accent)", fontFamily: "var(--event-heading-font)" }}>
           {event.name} Guest Book
         </h1>
         <GuestBookClient

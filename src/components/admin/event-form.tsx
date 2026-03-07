@@ -105,6 +105,12 @@ export function EventForm({ event, mode }: EventFormProps) {
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(
     (event?.theme as Record<string, any>)?.background_opacity ?? 50
   );
+  const [headingFont, setHeadingFont] = useState(
+    (event?.theme as Record<string, string>)?.heading_font ?? "Playfair Display"
+  );
+  const [bodyFont, setBodyFont] = useState(
+    (event?.theme as Record<string, string>)?.body_font ?? "Inter"
+  );
 
   function handleNameChange(value: string) {
     setName(value);
@@ -270,7 +276,9 @@ export function EventForm({ event, mode }: EventFormProps) {
     setBackgroundColor(defaults.background_color || "#FFFFFF");
     setBackgroundBlur(defaults.background_blur || 0);
     setBackgroundOpacity(defaults.background_opacity ?? 50);
-    toast.info(`Colors reset to ${brandKey} defaults`);
+    setHeadingFont(defaults.heading_font || "Playfair Display");
+    setBodyFont(defaults.body_font || "Inter");
+    toast.info(`Colors and fonts reset to ${brandKey} defaults`);
   }
 
   async function handleInvitationUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -331,6 +339,8 @@ export function EventForm({ event, mode }: EventFormProps) {
     if (backgroundUrl) theme.background_url = backgroundUrl;
     theme.background_blur = backgroundBlur;
     theme.background_opacity = backgroundOpacity;
+    theme.heading_font = headingFont;
+    theme.body_font = bodyFont;
     if (shareText) theme.share_text = shareText;
 
     const payload: Record<string, unknown> = {
@@ -788,14 +798,14 @@ export function EventForm({ event, mode }: EventFormProps) {
             </div>
             <div className="flex flex-wrap gap-3">
               {[
-                { name: "Rose Gold", primary: "#B76E79", accent: "#EACDC2", bg: "#FFF5F6" },
-                { name: "Modern Sage", primary: "#87A96B", accent: "#D4E0D2", bg: "#F4F9F0" },
-                { name: "Dusty Blue", primary: "#5D8AA8", accent: "#BCD4E6", bg: "#F0F7FA" },
-                { name: "Midnight", primary: "#1A2238", accent: "#FFD700", bg: "#F8F9FA" },
-                { name: "Champagne", primary: "#D4AF37", accent: "#EED971", bg: "#FCFBF0" },
-                { name: "Emerald", primary: "#046307", accent: "#A5D6A7", bg: "#F0F9F0" },
-                { name: "Burgundy", primary: "#800020", accent: "#D0A9AA", bg: "#FFF0F2" },
-                { name: "Lavender", primary: "#967BB6", accent: "#E6E6FA", bg: "#F9F7FC" },
+                { name: "Rose Gold", primary: "#B76E79", accent: "#EACDC2", bg: "#FFF5F6", heading: "Cormorant Garamond", body: "Montserrat" },
+                { name: "Modern Sage", primary: "#87A96B", accent: "#D4E0D2", bg: "#F4F9F0", heading: "Lora", body: "Open Sans" },
+                { name: "Dusty Blue", primary: "#5D8AA8", accent: "#BCD4E6", bg: "#F0F7FA", heading: "Playfair Display", body: "Source Sans Pro" },
+                { name: "Midnight", primary: "#1A2238", accent: "#FFD700", bg: "#F8F9FA", heading: "Cinzel", body: "Lato" },
+                { name: "Champagne", primary: "#D4AF37", accent: "#EED971", bg: "#FCFBF0", heading: "Sacramento", body: "Inter" },
+                { name: "Emerald", primary: "#046307", accent: "#A5D6A7", bg: "#F0F9F0", heading: "Playfair Display", body: "Montserrat" },
+                { name: "Burgundy", primary: "#800020", accent: "#D0A9AA", bg: "#FFF0F2", heading: "Cormorant Garamond", body: "Lato" },
+                { name: "Lavender", primary: "#967BB6", accent: "#E6E6FA", bg: "#F9F7FC", heading: "Alex Brush", body: "Open Sans" },
               ].map((theme) => (
                 <button
                   key={theme.name}
@@ -804,6 +814,8 @@ export function EventForm({ event, mode }: EventFormProps) {
                     setPrimaryColor(theme.primary);
                     setAccentColor(theme.accent);
                     setBackgroundColor(theme.bg);
+                    setHeadingFont(theme.heading);
+                    setBodyFont(theme.body);
                     toast.info(`Applied ${theme.name} theme`);
                   }}
                   className="group relative flex flex-col items-center gap-2"
@@ -885,6 +897,41 @@ export function EventForm({ event, mode }: EventFormProps) {
                   className="font-mono uppercase"
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Heading Font</Label>
+              <Select value={headingFont} onValueChange={setHeadingFont}>
+                <SelectTrigger className="rounded-full">
+                  <SelectValue placeholder="Select font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Playfair Display">Playfair Display (Classic)</SelectItem>
+                  <SelectItem value="Cormorant Garamond">Cormorant Garamond (Elegant)</SelectItem>
+                  <SelectItem value="Sacramento">Sacramento (Handwritten)</SelectItem>
+                  <SelectItem value="Alex Brush">Alex Brush (Script)</SelectItem>
+                  <SelectItem value="Cinzel">Cinzel (Sophisticated)</SelectItem>
+                  <SelectItem value="Lora">Lora (Minimalist)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Body Font</Label>
+              <Select value={bodyFont} onValueChange={setBodyFont}>
+                <SelectTrigger className="rounded-full">
+                  <SelectValue placeholder="Select font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Inter">Inter (Clean)</SelectItem>
+                  <SelectItem value="Source Sans Pro">Source Sans Pro (Modern)</SelectItem>
+                  <SelectItem value="Montserrat">Montserrat (Stylish)</SelectItem>
+                  <SelectItem value="Open Sans">Open Sans (Readable)</SelectItem>
+                  <SelectItem value="Lato">Lato (Soft)</SelectItem>
+                  <SelectItem value="Geist">Geist (Default)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

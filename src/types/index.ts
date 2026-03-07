@@ -14,6 +14,8 @@ export interface BrandTheme {
   background_url: string | null;
   background_blur?: number;
   background_opacity?: number;
+  heading_font?: string;
+  body_font?: string;
   disclaimer_text?: string;
   button_label?: string;
   share_text?: string;
