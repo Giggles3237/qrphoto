@@ -50,7 +50,7 @@ export default async function EventLandingPage({
             <Link
               href={`/e/${slug}/upload`}
               className="inline-flex items-center justify-center gap-3 rounded-full px-8 py-4 text-lg font-medium text-white transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-              style={{ backgroundColor: "var(--event-primary)" }}
+              style={{ backgroundColor: "var(--event-accent)", color: "var(--event-primary)" }}
             >
               <Camera className="h-5 w-5" />
               {theme.button_label ?? "Upload Photos"}
@@ -61,7 +61,7 @@ export default async function EventLandingPage({
             <Link
               href={`/e/${slug}/gallery`}
               className="inline-flex items-center justify-center gap-3 rounded-full border px-8 py-4 text-lg font-medium transition-all hover:bg-muted/50"
-              style={{ borderColor: "var(--event-primary)", color: "var(--event-primary)" }}
+              style={{ borderColor: "var(--event-accent)", color: "var(--event-accent)" }}
             >
               <Images className="h-5 w-5" />
               View Gallery
@@ -73,7 +73,7 @@ export default async function EventLandingPage({
               <Link
                 href={`/e/${slug}/guest-book`}
                 className="inline-flex items-center justify-center gap-3 rounded-full border px-8 py-4 text-lg font-medium transition-all hover:bg-muted/50"
-                style={{ borderColor: "var(--event-primary)", color: "var(--event-primary)" }}
+                style={{ borderColor: "var(--event-accent)", color: "var(--event-accent)" }}
               >
                 <MessageSquare className="h-5 w-5" />
                 Sign Guest Book

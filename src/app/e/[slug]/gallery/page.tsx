@@ -59,7 +59,7 @@ export default async function GalleryPage({
         <GalleryClient
           eventId={slug}
           initialMedia={media ?? []}
-          primaryColor={theme.primary_color}
+          primaryColor={theme.accent_color}
         />
       </div>
     </div>

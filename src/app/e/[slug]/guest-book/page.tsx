@@ -57,7 +57,7 @@ export default async function GuestBookPage({
         <GuestBookClient
           eventId={slug}
           initialEntries={entries ?? []}
-          primaryColor={theme.primary_color}
+          primaryColor={theme.accent_color}
         />
       </div>
     </div>

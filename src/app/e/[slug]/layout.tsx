@@ -98,6 +98,7 @@ export default async function EventLayout({
             <Link 
               href={`/e/${slug}`} 
               className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
+              style={{ color: "var(--event-accent)" }}
             >
               Home
             </Link>
@@ -105,6 +106,7 @@ export default async function EventLayout({
               <Link 
                 href={`/e/${slug}/gallery`} 
                 className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
+                style={{ color: "var(--event-accent)" }}
               >
                 Gallery
               </Link>
@@ -113,6 +115,7 @@ export default async function EventLayout({
               <Link 
                 href={`/e/${slug}/guest-book`} 
                 className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
+                style={{ color: "var(--event-accent)" }}
               >
                 Guest Book
               </Link>

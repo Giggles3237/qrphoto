@@ -214,35 +214,52 @@ export function EventForm({ event, mode }: EventFormProps) {
     }
   }
 
-  async function handleCroppedBackground(croppedBlob: Blob) {
-    setIsUploadingBackground(true);
+  async function handleCroppedBackground(
+    croppedBlob: Blob | null,
+    blur: number,
+    opacity: number
+  ) {
+    setBackgroundBlur(blur);
+    setBackgroundOpacity(opacity);
     setShowBgCropper(false);
-    setError(null);
 
-    const formData = new FormData();
-    const filename = `bg-${Date.now()}.png`;
-    formData.append("file", new File([croppedBlob], filename, { type: "image/png" }));
+    if (croppedBlob) {
+      setIsUploadingBackground(true);
+      setError(null);
 
-    try {
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const formData = new FormData();
+      const filename = `bg-${Date.now()}.png`;
+      formData.append(
+        "file",
+        new File([croppedBlob], filename, { type: "image/png" })
+      );
 
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Upload failed");
+        }
+
+        setBackgroundUrl(data.url);
+        toast.success("Background designer changes applied");
+      } catch (err) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Failed to upload cropped background";
+        setError(msg);
+        toast.error(msg);
+      } finally {
+        setIsUploadingBackground(false);
       }
-
-      setBackgroundUrl(data.url);
-      toast.success("Background cropped and uploaded successfully");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to upload cropped background";
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setIsUploadingBackground(false);
+    } else {
+      toast.success("Background settings updated");
     }
   }
 
@@ -677,7 +694,7 @@ export function EventForm({ event, mode }: EventFormProps) {
                     onClick={() => setShowBgCropper(true)}
                   >
                     <Crop className="h-3 w-3" />
-                    Adjust Crop
+                    Adjust Background
                   </Button>
                 </div>
               ) : (
@@ -723,7 +740,10 @@ export function EventForm({ event, mode }: EventFormProps) {
           {showBgCropper && backgroundUrl && (
             <BackgroundCropper
               imageSrc={backgroundUrl}
-              onCropComplete={handleCroppedBackground}
+              initialBlur={backgroundBlur}
+              initialOpacity={backgroundOpacity}
+              backgroundColor={backgroundColor}
+              onSave={handleCroppedBackground}
               onClose={() => setShowBgCropper(false)}
             />
           )}
@@ -894,48 +914,6 @@ export function EventForm({ event, mode }: EventFormProps) {
             <p className="text-[10px] text-muted-foreground">
               This will be used as the base background for all event pages.
             </p>
-          </div>
-
-          <div className="space-y-4 py-2 border-t border-muted mt-2">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="blur">Background Blur</Label>
-                <span className="text-xs font-mono">{backgroundBlur}px</span>
-              </div>
-              <input
-                id="blur"
-                type="range"
-                min="0"
-                max="20"
-                step="1"
-                value={backgroundBlur}
-                onChange={(e) => setBackgroundBlur(parseInt(e.target.value))}
-                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-              <p className="text-[10px] text-muted-foreground italic">
-                Blurs the background image to make text pop.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="opacity">Background Opacity</Label>
-                <span className="text-xs font-mono">{backgroundOpacity}%</span>
-              </div>
-              <input
-                id="opacity"
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={backgroundOpacity}
-                onChange={(e) => setBackgroundOpacity(parseInt(e.target.value))}
-                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-              <p className="text-[10px] text-muted-foreground italic">
-                Controls the intensity of the color overlay on the background.
-              </p>
-            </div>
           </div>
 
           <div className="space-y-2 pt-2 border-t border-muted">

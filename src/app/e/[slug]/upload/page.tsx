@@ -54,7 +54,7 @@ export default async function UploadPage({
           eventId={event.id}
           maxFileSizeMb={event.max_file_size_mb}
           allowedTypes={event.allowed_types}
-          primaryColor={theme.primary_color}
+          primaryColor={theme.accent_color}
           shareText={theme.share_text}
         />
       </div>
