@@ -53,7 +53,7 @@ export default async function GalleryPage({
   return (
     <div className="flex-1 px-4 py-8">
       <div className="max-w-5xl mx-auto space-y-8">
-        <h1 className="text-3xl font-serif tracking-tight text-center">
+        <h1 className="text-3xl font-serif tracking-tight text-center" style={{ color: "var(--event-accent)" }}>
           {theme.heading_text}
         </h1>
         <GalleryClient

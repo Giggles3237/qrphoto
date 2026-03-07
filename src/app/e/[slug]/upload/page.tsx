@@ -44,8 +44,8 @@ export default async function UploadPage({
     <div className="flex-1 flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-lg space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-serif tracking-tight">{theme.heading_text}</h1>
-          <p className="text-muted-foreground font-light">
+          <h1 className="text-3xl font-serif tracking-tight" style={{ color: "var(--event-accent)" }}>{theme.heading_text}</h1>
+          <p className="font-light" style={{ color: "var(--event-accent)", opacity: 0.8 }}>
             {theme.subheading_text}
           </p>
         </div>
