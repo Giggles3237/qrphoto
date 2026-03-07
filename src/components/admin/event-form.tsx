@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { LogoCropper } from "./logo-cropper";
 import { BRAND_THEMES } from "@/lib/brands/themes";
 import type { Event, BrandKey, PrivacyMode } from "@/types";
-import ColorThief from "colorthief";
+import { getPaletteSync } from "colorthief";
 
 interface EventFormProps {
   event?: Event;
@@ -38,13 +38,6 @@ function slugify(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-}
-
-function rgbToHex(r: number, g: number, b: number) {
-  return "#" + [r, g, b].map(x => {
-    const hex = Math.round(x).toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
-  }).join("").toUpperCase();
 }
 
 export function EventForm({ event, mode }: EventFormProps) {
@@ -190,25 +183,21 @@ export function EventForm({ event, mode }: EventFormProps) {
 
     reader.onload = async (event) => {
       const img = new Image();
+      img.crossOrigin = "Anonymous";
       img.onload = () => {
         try {
-          const colorThief = new ColorThief();
-          const palette = colorThief.getPalette(img, 5);
+          const palette = getPaletteSync(img, { colorCount: 5 });
           
           if (palette && palette.length >= 3) {
-            // Sort palette by luminance/vibrancy if needed, but ColorThief returns dominant first
             // 1. Dominant -> Primary
-            // 2. Brightest/Softest -> Background
-            // 3. Most contrast/vibrant -> Accent
+            const primary = palette[0].hex();
             
-            const primary = rgbToHex(palette[0][0], palette[0][1], palette[0][2]);
+            // 2. Find a light color for background (Lightness > 80)
+            const lightColor = palette.find(c => c.hsl().l > 80) || palette[1];
+            const bg = lightColor.hex();
             
-            // Find a light color for background
-            const lightColor = palette.find(p => (p[0] + p[1] + p[2]) > 600) || palette[1];
-            const bg = rgbToHex(lightColor[0], lightColor[1], lightColor[2]);
-            
-            // Find a vibrant color for accent
-            const accent = rgbToHex(palette[2][0], palette[2][1], palette[2][2]);
+            // 3. Find a vibrant color for accent (using the 3rd color in palette)
+            const accent = palette[2].hex();
 
             setPrimaryColor(primary);
             setBackgroundColor(bg);
