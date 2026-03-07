@@ -72,9 +72,7 @@ export function EventForm({ event, mode }: EventFormProps) {
   const [logoUrl, setLogoUrl] = useState(
     (event?.theme as Record<string, any>)?.logo_url ?? ""
   );
-  const [logoRounded, setLogoRounded] = useState<boolean>(
-    (event?.theme as Record<string, any>)?.logo_rounded ?? false
-  );
+  const [logoRounded, setLogoRounded] = useState<boolean>(true);
   const [headingText, setHeadingText] = useState(
     (event?.theme as Record<string, string>)?.heading_text ?? ""
   );
@@ -518,20 +516,6 @@ export function EventForm({ event, mode }: EventFormProps) {
                 )}
               </div>
             </div>
-            {logoUrl && (
-              <div className="flex items-center gap-2 mt-2">
-                <input
-                  type="checkbox"
-                  id="logoRounded"
-                  checked={logoRounded}
-                  onChange={(e) => setLogoRounded(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="logoRounded" className="text-sm font-normal">
-                  Crop logo as a circle
-                </Label>
-              </div>
-            )}
           </div>
 
           {showCropper && logoUrl && (
