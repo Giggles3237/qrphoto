@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Upload, X, Crop, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { LogoCropper } from "./logo-cropper";
+import { BackgroundCropper } from "./background-cropper";
 import { BRAND_THEMES } from "@/lib/brands/themes";
 import type { Event, BrandKey, PrivacyMode } from "@/types";
 import { getPaletteSync } from "colorthief";
@@ -48,6 +49,7 @@ export function EventForm({ event, mode }: EventFormProps) {
   const [isUploadingBackground, setIsUploadingBackground] = useState(false);
   const [isExtractingColors, setIsExtractingColors] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
+  const [showBgCropper, setShowBgCropper] = useState(false);
 
   const [name, setName] = useState(event?.name ?? "");
   const [slug, setSlug] = useState(event?.id ?? "");
@@ -199,6 +201,38 @@ export function EventForm({ event, mode }: EventFormProps) {
       toast.success("Background image uploaded successfully");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to upload background";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsUploadingBackground(false);
+    }
+  }
+
+  async function handleCroppedBackground(croppedBlob: Blob) {
+    setIsUploadingBackground(true);
+    setShowBgCropper(false);
+    setError(null);
+
+    const formData = new FormData();
+    const filename = `bg-${Date.now()}.png`;
+    formData.append("file", new File([croppedBlob], filename, { type: "image/png" }));
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      setBackgroundUrl(data.url);
+      toast.success("Background cropped and uploaded successfully");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to upload cropped background";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -608,21 +642,33 @@ export function EventForm({ event, mode }: EventFormProps) {
             <Label htmlFor="background-image">Background Image</Label>
             <div className="flex items-center gap-4">
               {backgroundUrl ? (
-                <div className="relative group">
-                  <div className="h-20 w-32 bg-muted rounded-lg border overflow-hidden flex items-center justify-center">
-                    <img
-                      src={backgroundUrl}
-                      alt="Background Preview"
-                      className="h-full w-full object-cover"
-                    />
+                <div className="flex flex-col gap-2">
+                  <div className="relative group">
+                    <div className="h-20 w-32 bg-muted rounded-lg border overflow-hidden flex items-center justify-center">
+                      <img
+                        src={backgroundUrl}
+                        alt="Background Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setBackgroundUrl("")}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    onClick={() => setBackgroundUrl("")}
-                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[10px] gap-1 px-2"
+                    onClick={() => setShowBgCropper(true)}
                   >
-                    <X className="h-3 w-3" />
-                  </button>
+                    <Crop className="h-3 w-3" />
+                    Adjust Crop
+                  </Button>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center h-20 w-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors">
@@ -661,6 +707,14 @@ export function EventForm({ event, mode }: EventFormProps) {
               imageSrc={logoUrl}
               onCropComplete={handleCroppedLogo}
               onClose={() => setShowCropper(false)}
+            />
+          )}
+
+          {showBgCropper && backgroundUrl && (
+            <BackgroundCropper
+              imageSrc={backgroundUrl}
+              onCropComplete={handleCroppedBackground}
+              onClose={() => setShowBgCropper(false)}
             />
           )}
 
