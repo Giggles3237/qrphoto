@@ -548,28 +548,40 @@ export function EventForm({ event, mode }: EventFormProps) {
           </div>
 
           <div className="space-y-4 pt-2">
-            <Label>Color Palette</Label>
-            <div className="flex flex-wrap gap-2">
+            <Label>Smart Wedding Themes</Label>
+            <div className="flex flex-wrap gap-3">
               {[
-                { name: "Rose Gold", color: "#B76E79" },
-                { name: "Sage", color: "#87A96B" },
-                { name: "Dusty Blue", color: "#5D8AA8" },
-                { name: "Navy", color: "#002366" },
-                { name: "Champagne", color: "#F7E7CE" },
-                { name: "Emerald", color: "#50C878" },
-                { name: "Burgundy", color: "#800020" },
-              ].map((preset) => (
+                { name: "Rose Gold", primary: "#B76E79", accent: "#FFFFFF", bg: "#FFF5F6" },
+                { name: "Modern Sage", primary: "#87A96B", accent: "#FFFFFF", bg: "#F4F9F0" },
+                { name: "Dusty Blue", primary: "#5D8AA8", accent: "#FFFFFF", bg: "#F0F7FA" },
+                { name: "Midnight", primary: "#1A2238", accent: "#FFD700", bg: "#F8F9FA" },
+                { name: "Champagne", primary: "#D4AF37", accent: "#FFFFFF", bg: "#FCFBF0" },
+                { name: "Emerald", primary: "#046307", accent: "#FFFFFF", bg: "#F0F9F0" },
+                { name: "Burgundy", primary: "#800020", accent: "#FFFFFF", bg: "#FFF0F2" },
+                { name: "Lavender", primary: "#967BB6", accent: "#FFFFFF", bg: "#F9F7FC" },
+              ].map((theme) => (
                 <button
-                  key={preset.color}
+                  key={theme.name}
                   type="button"
-                  onClick={() => setPrimaryColor(preset.color)}
-                  className="group relative flex flex-col items-center gap-1"
+                  onClick={() => {
+                    setPrimaryColor(theme.primary);
+                    setAccentColor(theme.accent);
+                    setBackgroundColor(theme.bg);
+                    toast.info(`Applied ${theme.name} theme`);
+                  }}
+                  className="group relative flex flex-col items-center gap-2"
                 >
-                  <div
-                    className="h-8 w-8 rounded-full border shadow-sm transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: preset.color }}
-                  />
-                  <span className="text-[10px] text-muted-foreground">{preset.name}</span>
+                  <div className="flex -space-x-2 transition-transform group-hover:scale-105">
+                    <div
+                      className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: theme.primary }}
+                    />
+                    <div
+                      className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: theme.bg }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground">{theme.name}</span>
                 </button>
               ))}
             </div>
