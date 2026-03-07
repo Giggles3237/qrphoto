@@ -109,15 +109,22 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
               </div>
             )}
 
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button
-                variant="destructive"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setConfirmDelete(item.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+              {item.uploader_name && (
+                <span className="text-[10px] text-white font-medium px-2 text-center truncate w-full mb-1">
+                  By {item.uploader_name}
+                </span>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setConfirmDelete(item.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {item.status !== "ready" && (

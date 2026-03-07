@@ -53,10 +53,11 @@ CREATE TABLE public.media (
   mime_type           TEXT,
   width               INTEGER,
   height              INTEGER,
-  status              TEXT NOT NULL DEFAULT 'pending'
+  status               TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'processing', 'ready', 'failed')),
   uploader_fingerprint TEXT,
-  metadata_json       JSONB DEFAULT '{}'::jsonb,
+  uploader_name        TEXT,
+  metadata_json        JSONB NOT NULL DEFAULT '{}'::jsonb,
   uploaded_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

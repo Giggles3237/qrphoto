@@ -57,6 +57,7 @@ export interface Media {
   height: number | null;
   status: MediaStatus;
   uploader_fingerprint: string | null;
+  uploader_name: string | null;
   metadata_json: Record<string, unknown>;
   uploaded_at: string;
 }

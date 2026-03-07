@@ -6,7 +6,7 @@ import { processImage } from "@/lib/media/process-image";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { eventId, fileId, objectKey, contentType, fileSize } = body;
+    const { eventId, fileId, objectKey, contentType, fileSize, uploaderName } = body;
 
     if (!eventId || !fileId || !objectKey) {
       return NextResponse.json(
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
         size_bytes: fileSize ?? head.contentLength,
         mime_type: contentType ?? head.contentType,
         status: "processing",
+        uploader_name: uploaderName || null,
         uploader_fingerprint:
           request.headers.get("x-forwarded-for")?.split(",")[0] ?? null,
       })
