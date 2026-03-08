@@ -3,6 +3,13 @@ import { notFound } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveTheme } from "@/lib/brands";
+import { Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Event, BrandKey, BrandTheme } from "@/types";
 
 export default async function EventLayout({
@@ -102,46 +109,84 @@ export default async function EventLayout({
 
       <div className="min-h-screen flex flex-col relative z-10">
         {/* Header */}
-        <header className="flex flex-col items-center sticky top-0 z-10 pt-8 pb-4 bg-gradient-to-b from-[var(--event-bg)] via-[var(--event-bg)]/95 to-transparent px-4">
-          {theme.logo_url && (
-            <Link href={`/e/${slug}`} className="transition-transform hover:scale-105 mb-6">
-              <div className={`relative overflow-hidden flex items-center justify-center bg-white shadow-md rounded-full h-32 w-32 ${!theme.logo_rounded ? 'p-4' : ''}`}>
-                <img
-                  src={theme.logo_url}
-                  alt="Event logo"
-                  className={theme.logo_rounded ? 'h-full w-full object-cover' : 'max-h-full max-w-full object-contain'}
-                />
-              </div>
-            </Link>
-          )}
-          
-          <nav className="flex items-center gap-1 sm:gap-4 text-sm font-medium">
-            <Link 
-              href={`/e/${slug}`} 
-              className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
-              style={{ color: "var(--event-accent)" }}
-            >
-              Home
-            </Link>
-            {event.gallery_enabled && (
+        <header className="sticky top-0 z-50 w-full bg-[var(--event-bg)]/80 backdrop-blur-md border-b border-muted/20 shadow-sm transition-all duration-300">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-row sm:flex-col items-center justify-between sm:justify-center py-3 sm:pt-8 sm:pb-4 gap-0 sm:gap-6">
+            {theme.logo_url && (
+              <Link href={`/e/${slug}`} className="transition-transform hover:scale-105">
+                <div className={`relative overflow-hidden flex items-center justify-center bg-white shadow-sm rounded-full h-12 w-12 sm:h-32 sm:w-32 ${!theme.logo_rounded ? 'p-1.5 sm:p-4' : ''}`}>
+                  <img
+                    src={theme.logo_url}
+                    alt="Event logo"
+                    className={theme.logo_rounded ? 'h-full w-full object-cover' : 'max-h-full max-w-full object-contain'}
+                  />
+                </div>
+              </Link>
+            )}
+            
+            {/* Desktop Nav */}
+            <nav className="hidden sm:flex items-center gap-1 sm:gap-4 text-sm font-medium">
               <Link 
-                href={`/e/${slug}/gallery`} 
+                href={`/e/${slug}`} 
                 className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
                 style={{ color: "var(--event-accent)" }}
               >
-                Gallery
+                Home
               </Link>
-            )}
-            {event.guest_book_enabled && (
-              <Link 
-                href={`/e/${slug}/guest-book`} 
-                className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
-                style={{ color: "var(--event-accent)" }}
-              >
-                Guest Book
-              </Link>
-            )}
-          </nav>
+              {event.gallery_enabled && (
+                <Link 
+                  href={`/e/${slug}/gallery`} 
+                  className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
+                  style={{ color: "var(--event-accent)" }}
+                >
+                  Gallery
+                </Link>
+              )}
+              {event.guest_book_enabled && (
+                <Link 
+                  href={`/e/${slug}/guest-book`} 
+                  className="px-3 py-1.5 rounded-full transition-colors hover:bg-muted/50"
+                  style={{ color: "var(--event-accent)" }}
+                >
+                  Guest Book
+                </Link>
+              )}
+            </nav>
+
+            {/* Mobile Nav Trigger */}
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                    className="p-2 rounded-full transition-colors hover:bg-muted/50 outline-none"
+                    style={{ color: "var(--event-accent)" }}
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-[var(--event-bg)] border-muted/30 shadow-xl">
+                  <DropdownMenuItem asChild className="rounded-xl focus:bg-muted/50">
+                    <Link href={`/e/${slug}`} className="w-full flex items-center py-3 px-2 font-medium" style={{ color: "var(--event-accent)" }}>
+                      Home
+                    </Link>
+                  </DropdownMenuItem>
+                  {event.gallery_enabled && (
+                    <DropdownMenuItem asChild className="rounded-xl focus:bg-muted/50">
+                      <Link href={`/e/${slug}/gallery`} className="w-full flex items-center py-3 px-2 font-medium" style={{ color: "var(--event-accent)" }}>
+                        Gallery
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {event.guest_book_enabled && (
+                    <DropdownMenuItem asChild className="rounded-xl focus:bg-muted/50">
+                      <Link href={`/e/${slug}/guest-book`} className="w-full flex items-center py-3 px-2 font-medium" style={{ color: "var(--event-accent)" }}>
+                        Guest Book
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </header>
 
         {/* Content */}
