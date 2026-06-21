@@ -23,6 +23,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   async function handleDelete(mediaId: string) {
     setDeleting(mediaId);
@@ -38,32 +39,69 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
   }
 
   async function handleDownloadAll() {
+    let downloadWindow: Window | null = null;
+
     try {
+      setDownloading(true);
+      downloadWindow = window.open("", "_blank");
       const res = await fetch(`/api/download/${eventId}`, { method: "POST" });
       const data = await res.json();
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, "_blank");
+
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to start download");
+      }
+
+      if (typeof data.downloadUrl === "string") {
+        if (downloadWindow) {
+          downloadWindow.location.href = data.downloadUrl;
+        } else {
+          window.location.href = data.downloadUrl;
+        }
       } else if (data.jobId) {
-        // Poll for completion
-        pollDownloadJob(data.jobId);
+        await pollDownloadJob(data.jobId, downloadWindow);
+      } else {
+        throw new Error("Download did not return a job");
       }
     } catch (error) {
+      downloadWindow?.close();
       console.error("Download error:", error);
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
     }
   }
 
-  async function pollDownloadJob(jobId: string) {
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/download/${eventId}?jobId=${jobId}`);
-      const data = await res.json();
-      if (data.status === "ready" && data.downloadUrl) {
-        clearInterval(interval);
-        window.open(data.downloadUrl, "_blank");
-      } else if (data.status === "failed") {
-        clearInterval(interval);
-        alert("Download failed. Please try again.");
-      }
-    }, 2000);
+  async function pollDownloadJob(jobId: string, downloadWindow: Window | null) {
+    return new Promise<void>((resolve, reject) => {
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/download/${eventId}?jobId=${jobId}`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            clearInterval(interval);
+            reject(new Error(data.error ?? "Failed to check download status"));
+            return;
+          }
+
+          if (data.status === "ready" && data.downloadUrl) {
+            clearInterval(interval);
+            if (downloadWindow && !downloadWindow.closed) {
+              downloadWindow.location.href = data.downloadUrl;
+            } else {
+              window.location.href = data.downloadUrl;
+            }
+            resolve();
+          } else if (data.status === "failed") {
+            clearInterval(interval);
+            reject(new Error(data.error ?? "Download failed"));
+          }
+        } catch (error) {
+          clearInterval(interval);
+          reject(error);
+        }
+      }, 2000);
+    });
   }
 
   if (media.length === 0) {
@@ -86,7 +124,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
         </p>
         <Button variant="outline" size="sm" onClick={handleDownloadAll}>
           <Download className="h-4 w-4 mr-2" />
-          Download All
+          {downloading ? "Preparing..." : "Download All"}
         </Button>
       </div>
 
@@ -98,7 +136,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
           >
             {item.object_key_thumb ? (
               <img
-                src={`/api/media/${item.id}/url?variant=thumb`}
+                src={`/api/media/${item.id}/url?variant=thumb&redirect=true`}
                 alt=""
                 className="w-full h-full object-cover"
                 loading="lazy"
