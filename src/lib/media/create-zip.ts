@@ -2,7 +2,7 @@ import archiver from "archiver";
 import { PassThrough } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { r2Client, R2_BUCKET } from "@/lib/r2/client";
-import { getObjectBuffer, listObjects } from "@/lib/r2/operations";
+import { getObjectStream, listObjects } from "@/lib/r2/operations";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface MediaZipItem {
@@ -27,22 +27,27 @@ async function uploadZipFromObjects(
   }) => Promise<void> | void
 ): Promise<{ fileCount: number; totalBytes: number }> {
   const archive = archiver("zip", { zlib: { level: 5 } });
-  const passthrough = new PassThrough();
+  const passthrough = new PassThrough({ highWaterMark: 1024 * 1024 });
   archive.pipe(passthrough);
 
   let totalBytes = 0;
   let fileCount = 0;
+  const progressUpdates: Promise<void>[] = [];
 
-  for (const obj of objects) {
-    const buffer = await getObjectBuffer(obj.key);
-    const filename = obj.key.split("/").pop() ?? obj.key;
-    archive.append(buffer, { name: filename });
-    totalBytes += obj.size;
+  archive.on("entry", () => {
+    const obj = objects[fileCount];
     fileCount += 1;
-    await onProgress?.({ fileCount, totalBytes });
-  }
+    totalBytes += obj?.size ?? 0;
 
-  void archive.finalize();
+    const update = onProgress?.({ fileCount, totalBytes });
+    if (update) {
+      progressUpdates.push(Promise.resolve(update));
+    }
+  });
+
+  archive.on("error", (error) => {
+    passthrough.destroy(error);
+  });
 
   const upload = new Upload({
     client: r2Client,
@@ -54,7 +59,17 @@ async function uploadZipFromObjects(
     },
   });
 
-  await upload.done();
+  const uploadPromise = upload.done();
+
+  for (const obj of objects) {
+    const stream = await getObjectStream(obj.key);
+    const filename = obj.key.split("/").pop() ?? obj.key;
+    archive.append(stream, { name: filename });
+  }
+
+  await archive.finalize();
+  await uploadPromise;
+  await Promise.all(progressUpdates);
 
   return {
     fileCount,

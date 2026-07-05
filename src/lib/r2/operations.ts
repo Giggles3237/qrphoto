@@ -6,6 +6,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Readable } from "stream";
 import { r2Client, R2_BUCKET } from "./client";
 
 export async function headObject(
@@ -30,6 +31,18 @@ export async function getObjectBuffer(objectKey: string): Promise<Buffer> {
   );
   const bytes = await result.Body!.transformToByteArray();
   return Buffer.from(bytes);
+}
+
+export async function getObjectStream(objectKey: string): Promise<Readable> {
+  const result = await r2Client.send(
+    new GetObjectCommand({ Bucket: R2_BUCKET, Key: objectKey })
+  );
+
+  if (!result.Body) {
+    throw new Error(`Object ${objectKey} did not return a readable body`);
+  }
+
+  return result.Body as Readable;
 }
 
 export async function putBuffer(

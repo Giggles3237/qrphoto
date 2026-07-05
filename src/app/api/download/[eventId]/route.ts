@@ -167,6 +167,28 @@ export async function GET(
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
+  if (
+    (job.status === "pending" || job.status === "processing") &&
+    isStaleDownloadJob(job)
+  ) {
+    await admin
+      .from("download_jobs")
+      .update({
+        status: "failed",
+        error: "Download job stopped before finishing. Please try again.",
+      })
+      .eq("id", job.id);
+
+    return NextResponse.json({
+      jobId: job.id,
+      status: "failed",
+      fileCount: job.file_count,
+      totalFileCount: await getEventMediaCount(admin, eventId),
+      totalBytes: job.total_bytes,
+      error: "Download job stopped before finishing. Please try again.",
+    });
+  }
+
   const response: Record<string, unknown> = {
     jobId: job.id,
     status: job.status,
