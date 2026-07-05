@@ -45,6 +45,12 @@ interface DownloadProgress {
   message: string;
 }
 
+interface BulkDownloadPart {
+  label: string;
+  url: string;
+  fileRange: string;
+}
+
 const BULK_DOWNLOAD_CHUNK_SIZE = 50;
 
 export function MediaGrid({ media, eventId }: MediaGridProps) {
@@ -56,6 +62,9 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
   const [downloadingMediaId, setDownloadingMediaId] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] =
     useState<DownloadProgress | null>(null);
+  const [bulkDownloadParts, setBulkDownloadParts] = useState<BulkDownloadPart[]>(
+    []
+  );
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -136,36 +145,6 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
     }
   }
 
-  function addDownloadLink(
-    downloadWindow: Window | null,
-    url: string,
-    label: string
-  ) {
-    if (!downloadWindow || downloadWindow.closed) return;
-
-    try {
-      const doc = downloadWindow.document;
-      const links = doc.getElementById("download-links");
-      if (!links) return;
-
-      const link = doc.createElement("a");
-      link.href = url;
-      link.textContent = label;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.style.cssText =
-        "display:block;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;color:#111827;text-decoration:none;font-size:14px;font-weight:600;";
-      links.appendChild(link);
-
-      const iframe = doc.createElement("iframe");
-      iframe.src = url;
-      iframe.style.display = "none";
-      doc.body.appendChild(iframe);
-    } catch {
-      // The window may already be navigating or blocked by browser policy.
-    }
-  }
-
   function chunkMediaIds(mediaIds: string[]) {
     const chunks: string[][] = [];
 
@@ -174,10 +153,6 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
     }
 
     return chunks;
-  }
-
-  function wait(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function getProgressFromResponse(data: DownloadResponse): DownloadProgress {
@@ -300,9 +275,9 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
   async function handleDownloadAll() {
     const mediaIds = downloadableMedia.map((item) => item.id);
     const chunks = chunkMediaIds(mediaIds);
-    let downloadWindow: Window | null = null;
     let processedFiles = 0;
 
+    setBulkDownloadParts([]);
     setDownloadProgress({
       status: "pending",
       processedFiles: 0,
@@ -328,7 +303,6 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
 
     try {
       setDownloadingAll(true);
-      downloadWindow = openDownloadWindow();
 
       for (let index = 0; index < chunks.length; index += 1) {
         const chunk = chunks[index];
@@ -346,7 +320,6 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
           message: `Preparing ZIP ${index + 1} of ${chunks.length} (${startingFile}-${endingFile} of ${bulkMediaCount} files)`,
         };
         setDownloadProgress(preparingProgress);
-        updateDownloadWindow(downloadWindow, preparingProgress);
 
         const res = await fetch(`/api/download/${eventId}`, {
           method: "POST",
@@ -371,13 +344,14 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
           message: `Prepared ZIP ${index + 1} of ${chunks.length} (${processedFiles} of ${bulkMediaCount} files)`,
         };
         setDownloadProgress(readyProgress);
-        updateDownloadWindow(downloadWindow, readyProgress);
-        addDownloadLink(
-          downloadWindow,
-          data.downloadUrl,
-          `Download ZIP ${index + 1} of ${chunks.length}`
-        );
-        await wait(500);
+        setBulkDownloadParts((current) => [
+          ...current,
+          {
+            label: `ZIP ${index + 1}`,
+            url: data.downloadUrl!,
+            fileRange: `${startingFile}-${endingFile}`,
+          },
+        ]);
       }
 
       const completeProgress = {
@@ -387,11 +361,10 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
         percent: 100,
         message:
           chunks.length === 1
-            ? "Download ready. If it did not start automatically, use the link in the download tab."
-            : `All ${chunks.length} ZIP parts are ready. If any did not start automatically, use the links in the download tab.`,
+            ? "Download ready"
+            : `All ${chunks.length} ZIP parts are ready`,
       };
       setDownloadProgress(completeProgress);
-      updateDownloadWindow(downloadWindow, completeProgress);
     } catch (error) {
       console.error("Download error:", error);
       const failedProgress = {
@@ -405,7 +378,6 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
             : "Download failed",
       };
       setDownloadProgress(failedProgress);
-      updateDownloadWindow(downloadWindow, failedProgress);
       alert("Download failed. Please try again.");
     } finally {
       setDownloadingAll(false);
@@ -588,6 +560,30 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
               style={{ width: `${downloadProgress.percent}%` }}
             />
           </div>
+          {bulkDownloadParts.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {bulkDownloadParts.map((part) => (
+                <Button
+                  key={part.label}
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                >
+                  <a
+                    href={part.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {part.label}
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      {part.fileRange}
+                    </span>
+                  </a>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
