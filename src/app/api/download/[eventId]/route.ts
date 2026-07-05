@@ -4,6 +4,42 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { generateDownloadUrl } from "@/lib/r2/presign";
 import { createEventZip, createSelectionZip } from "@/lib/media/create-zip";
 
+interface DownloadRequestBody {
+  mediaIds?: unknown;
+  downloadName?: unknown;
+}
+
+function slugifyFileName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 80);
+}
+
+function normalizeZipName(value: unknown) {
+  if (typeof value !== "string") return null;
+
+  const withoutExtension = value.replace(/\.zip$/i, "");
+  const slug = slugifyFileName(withoutExtension);
+  if (!slug) return null;
+
+  return `${slug}.zip`;
+}
+
+async function getEventName(
+  admin: ReturnType<typeof createAdminClient>,
+  eventId: string
+) {
+  const { data } = await admin
+    .from("events")
+    .select("name")
+    .eq("id", eventId)
+    .single();
+
+  return typeof data?.name === "string" ? data.name : "event";
+}
+
 async function getEventMediaCount(
   admin: ReturnType<typeof createAdminClient>,
   eventId: string
@@ -40,11 +76,12 @@ export async function POST(
   }
 
   let mediaIds: string[] = [];
+  let requestedDownloadName: string | null = null;
   const contentType = request.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
     const body = (await request.json().catch(() => null)) as
-      | { mediaIds?: unknown }
+      | DownloadRequestBody
       | null;
 
     if (Array.isArray(body?.mediaIds)) {
@@ -52,20 +89,33 @@ export async function POST(
         (value): value is string => typeof value === "string" && value.length > 0
       );
     }
+
+    requestedDownloadName = normalizeZipName(body?.downloadName);
   }
 
   const admin = createAdminClient();
 
   if (mediaIds.length > 0) {
     try {
-      const result = await createSelectionZip(eventId, mediaIds);
-      const downloadUrl = await generateDownloadUrl(result.objectKey, 3600);
+      const eventName = await getEventName(admin, eventId);
+      const downloadName =
+        requestedDownloadName ??
+        `${slugifyFileName(eventName) || "event"}-photos.zip`;
+      const result = await createSelectionZip(eventId, mediaIds, {
+        downloadName,
+      });
+      const downloadUrl = await generateDownloadUrl(
+        result.objectKey,
+        3600,
+        result.downloadName
+      );
 
       return NextResponse.json({
         status: "ready",
         fileCount: result.fileCount,
         totalFileCount: result.fileCount,
         totalBytes: result.totalBytes,
+        downloadName: result.downloadName,
         downloadUrl,
         expiresAt: result.expiresAt,
       });
@@ -199,7 +249,14 @@ export async function GET(
   };
 
   if (job.status === "ready" && job.object_key) {
-    response.downloadUrl = await generateDownloadUrl(job.object_key, 3600);
+    const eventName = await getEventName(admin, eventId);
+    const downloadName = `${slugifyFileName(eventName) || "event"}-photos.zip`;
+    response.downloadName = downloadName;
+    response.downloadUrl = await generateDownloadUrl(
+      job.object_key,
+      3600,
+      downloadName
+    );
   }
 
   return NextResponse.json(response);

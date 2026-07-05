@@ -53,7 +53,7 @@ export default async function EventDetailPage({
         </TabsContent>
 
         <TabsContent value="media" className="mt-6">
-          <MediaGrid media={media ?? []} eventId={eventId} />
+          <MediaGrid media={media ?? []} eventId={eventId} eventName={event.name} />
         </TabsContent>
 
         <TabsContent value="qr" className="mt-6">

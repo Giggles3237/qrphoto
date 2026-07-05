@@ -18,11 +18,15 @@ export async function generateUploadUrl(
 
 export async function generateDownloadUrl(
   objectKey: string,
-  expiresIn: number = 3600
+  expiresIn: number = 3600,
+  downloadName?: string
 ): Promise<string> {
   const command = new GetObjectCommand({
     Bucket: R2_BUCKET,
     Key: objectKey,
+    ResponseContentDisposition: downloadName
+      ? `attachment; filename="${downloadName.replaceAll('"', "")}"`
+      : undefined,
   });
 
   return getSignedUrl(r2Client, command, { expiresIn });

@@ -16,6 +16,11 @@ interface ZipResult {
   fileCount: number;
   totalBytes: number;
   expiresAt: string;
+  downloadName: string;
+}
+
+interface SelectionZipOptions {
+  downloadName?: string;
 }
 
 async function uploadZipFromObjects(
@@ -86,7 +91,8 @@ function toZipObject(item: MediaZipItem) {
 
 export async function createSelectionZip(
   eventId: string,
-  mediaIds: string[]
+  mediaIds: string[],
+  options: SelectionZipOptions = {}
 ): Promise<ZipResult> {
   const supabase = createAdminClient();
   const uniqueMediaIds = [...new Set(mediaIds)];
@@ -112,7 +118,8 @@ export async function createSelectionZip(
     throw new Error("Some selected files are unavailable");
   }
 
-  const zipKey = `events/${eventId}/downloads/selection-${Date.now()}.zip`;
+  const downloadName = options.downloadName ?? `photos-${Date.now()}.zip`;
+  const zipKey = `events/${eventId}/downloads/${Date.now()}-${downloadName}`;
   const { fileCount, totalBytes } = await uploadZipFromObjects(
     items.map(toZipObject),
     zipKey
@@ -122,6 +129,7 @@ export async function createSelectionZip(
     objectKey: zipKey,
     fileCount,
     totalBytes,
+    downloadName,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   };
 }

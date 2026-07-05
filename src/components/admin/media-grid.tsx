@@ -25,6 +25,7 @@ import type { Media } from "@/types";
 interface MediaGridProps {
   media: Media[];
   eventId: string;
+  eventName: string;
 }
 
 interface DownloadResponse {
@@ -35,6 +36,7 @@ interface DownloadResponse {
   fileCount?: number;
   totalFileCount?: number;
   totalBytes?: number;
+  downloadName?: string;
 }
 
 interface DownloadProgress {
@@ -49,11 +51,12 @@ interface BulkDownloadPart {
   label: string;
   url: string;
   fileRange: string;
+  downloadName: string;
 }
 
 const BULK_DOWNLOAD_CHUNK_SIZE = 50;
 
-export function MediaGrid({ media, eventId }: MediaGridProps) {
+export function MediaGrid({ media, eventId, eventName }: MediaGridProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -153,6 +156,26 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
     }
 
     return chunks;
+  }
+
+  function getFileNameBase() {
+    return (
+      eventName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        .slice(0, 64) || "event"
+    );
+  }
+
+  function getBulkZipName(partNumber: number, totalParts: number) {
+    const part = String(partNumber).padStart(2, "0");
+    const total = String(totalParts).padStart(2, "0");
+    return `${getFileNameBase()}-photos-part-${part}-of-${total}.zip`;
+  }
+
+  function getSelectedZipName(count: number) {
+    return `${getFileNameBase()}-${count}-selected-photos.zip`;
   }
 
   function getProgressFromResponse(data: DownloadResponse): DownloadProgress {
@@ -324,7 +347,10 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
         const res = await fetch(`/api/download/${eventId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mediaIds: chunk }),
+          body: JSON.stringify({
+            mediaIds: chunk,
+            downloadName: getBulkZipName(index + 1, chunks.length),
+          }),
         });
         const data = (await res.json()) as DownloadResponse;
 
@@ -347,9 +373,11 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
         setBulkDownloadParts((current) => [
           ...current,
           {
-            label: `ZIP ${index + 1}`,
+            label: `Part ${index + 1}`,
             url: data.downloadUrl!,
             fileRange: `${startingFile}-${endingFile}`,
+            downloadName:
+              data.downloadName ?? getBulkZipName(index + 1, chunks.length),
           },
         ]);
       }
@@ -397,7 +425,10 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mediaIds: selectedIds }),
+        body: JSON.stringify({
+          mediaIds: selectedIds,
+          downloadName: getSelectedZipName(selectedIds.length),
+        }),
       },
       null,
       setDownloadingSelected
@@ -579,6 +610,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
                     <span className="ml-1 text-xs text-muted-foreground">
                       {part.fileRange}
                     </span>
+                    <span className="sr-only"> {part.downloadName}</span>
                   </a>
                 </Button>
               ))}
