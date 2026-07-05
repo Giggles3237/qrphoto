@@ -45,6 +45,8 @@ interface DownloadProgress {
   message: string;
 }
 
+const BULK_DOWNLOAD_CHUNK_SIZE = 50;
+
 export function MediaGrid({ media, eventId }: MediaGridProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -58,7 +60,8 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const selectedCount = selectedIds.length;
-  const bulkMediaCount = media.length;
+  const downloadableMedia = media.filter((item) => item.status === "ready");
+  const bulkMediaCount = downloadableMedia.length;
 
   function clearSelection() {
     setSelectedIds([]);
@@ -88,6 +91,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
               <div id="download-progress-bar" style="height:100%;width:10%;border-radius:999px;background:#111827;transition:width .25s ease;"></div>
             </div>
             <p id="download-percent" style="margin:10px 0 0;color:#6b7280;font-size:13px;">10%</p>
+            <div id="download-links" style="display:grid;gap:8px;margin-top:18px;"></div>
           </section>
         </main>
       `;
@@ -115,10 +119,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
       const bar = downloadWindow.document.getElementById("download-progress-bar");
 
       if (message) {
-        message.textContent =
-          progress.status === "ready"
-            ? "Your ZIP is ready. The download should start automatically."
-            : progress.message;
+        message.textContent = progress.message;
       }
 
       if (percent) {
@@ -133,6 +134,50 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
     } catch {
       // The window may already be navigating to the download URL.
     }
+  }
+
+  function addDownloadLink(
+    downloadWindow: Window | null,
+    url: string,
+    label: string
+  ) {
+    if (!downloadWindow || downloadWindow.closed) return;
+
+    try {
+      const doc = downloadWindow.document;
+      const links = doc.getElementById("download-links");
+      if (!links) return;
+
+      const link = doc.createElement("a");
+      link.href = url;
+      link.textContent = label;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.style.cssText =
+        "display:block;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;color:#111827;text-decoration:none;font-size:14px;font-weight:600;";
+      links.appendChild(link);
+
+      const iframe = doc.createElement("iframe");
+      iframe.src = url;
+      iframe.style.display = "none";
+      doc.body.appendChild(iframe);
+    } catch {
+      // The window may already be navigating or blocked by browser policy.
+    }
+  }
+
+  function chunkMediaIds(mediaIds: string[]) {
+    const chunks: string[][] = [];
+
+    for (let index = 0; index < mediaIds.length; index += BULK_DOWNLOAD_CHUNK_SIZE) {
+      chunks.push(mediaIds.slice(index, index + BULK_DOWNLOAD_CHUNK_SIZE));
+    }
+
+    return chunks;
+  }
+
+  function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function getProgressFromResponse(data: DownloadResponse): DownloadProgress {
@@ -253,6 +298,11 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
   }
 
   async function handleDownloadAll() {
+    const mediaIds = downloadableMedia.map((item) => item.id);
+    const chunks = chunkMediaIds(mediaIds);
+    let downloadWindow: Window | null = null;
+    let processedFiles = 0;
+
     setDownloadProgress({
       status: "pending",
       processedFiles: 0,
@@ -263,13 +313,103 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
           ? `Preparing 0 of ${bulkMediaCount} files`
           : "Preparing download",
     });
-    await startDownloadRequest(
-      `/api/download/${eventId}`,
-      { method: "POST" },
-      null,
-      setDownloadingAll,
-      setDownloadProgress
-    );
+
+    if (chunks.length === 0) {
+      setDownloadProgress({
+        status: "failed",
+        processedFiles: 0,
+        totalFiles: 0,
+        percent: 100,
+        message: "No ready photos are available to download",
+      });
+      alert("No ready photos are available to download yet.");
+      return;
+    }
+
+    try {
+      setDownloadingAll(true);
+      downloadWindow = openDownloadWindow();
+
+      for (let index = 0; index < chunks.length; index += 1) {
+        const chunk = chunks[index];
+        const startingFile = processedFiles + 1;
+        const endingFile = processedFiles + chunk.length;
+        const percent = Math.max(
+          10,
+          Math.round((processedFiles / bulkMediaCount) * 100)
+        );
+        const preparingProgress = {
+          status: "processing",
+          processedFiles,
+          totalFiles: bulkMediaCount,
+          percent,
+          message: `Preparing ZIP ${index + 1} of ${chunks.length} (${startingFile}-${endingFile} of ${bulkMediaCount} files)`,
+        };
+        setDownloadProgress(preparingProgress);
+        updateDownloadWindow(downloadWindow, preparingProgress);
+
+        const res = await fetch(`/api/download/${eventId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mediaIds: chunk }),
+        });
+        const data = (await res.json()) as DownloadResponse;
+
+        if (!res.ok || !data.downloadUrl) {
+          throw new Error(data.error ?? "Failed to prepare ZIP part");
+        }
+
+        processedFiles += chunk.length;
+        const readyProgress = {
+          status: "processing",
+          processedFiles,
+          totalFiles: bulkMediaCount,
+          percent: Math.min(
+            99,
+            Math.round((processedFiles / bulkMediaCount) * 100)
+          ),
+          message: `Prepared ZIP ${index + 1} of ${chunks.length} (${processedFiles} of ${bulkMediaCount} files)`,
+        };
+        setDownloadProgress(readyProgress);
+        updateDownloadWindow(downloadWindow, readyProgress);
+        addDownloadLink(
+          downloadWindow,
+          data.downloadUrl,
+          `Download ZIP ${index + 1} of ${chunks.length}`
+        );
+        await wait(500);
+      }
+
+      const completeProgress = {
+        status: "ready",
+        processedFiles,
+        totalFiles: bulkMediaCount,
+        percent: 100,
+        message:
+          chunks.length === 1
+            ? "Download ready. If it did not start automatically, use the link in the download tab."
+            : `All ${chunks.length} ZIP parts are ready. If any did not start automatically, use the links in the download tab.`,
+      };
+      setDownloadProgress(completeProgress);
+      updateDownloadWindow(downloadWindow, completeProgress);
+    } catch (error) {
+      console.error("Download error:", error);
+      const failedProgress = {
+        status: "failed",
+        processedFiles,
+        totalFiles: bulkMediaCount,
+        percent: 100,
+        message:
+          processedFiles > 0
+            ? `Download failed after preparing ${processedFiles} of ${bulkMediaCount} files`
+            : "Download failed",
+      };
+      setDownloadProgress(failedProgress);
+      updateDownloadWindow(downloadWindow, failedProgress);
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloadingAll(false);
+    }
   }
 
   async function handleDownloadSelected() {
@@ -415,7 +555,7 @@ export function MediaGrid({ media, eventId }: MediaGridProps) {
             variant="outline"
             size="sm"
             onClick={handleDownloadAll}
-            disabled={downloadingAll}
+            disabled={downloadingAll || bulkMediaCount === 0}
           >
             <Download className="mr-2 h-4 w-4" />
             {downloadingAll ? "Preparing All..." : "Download All"}
